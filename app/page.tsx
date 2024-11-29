@@ -34,7 +34,7 @@ export default function Home() {
       const kexCPkB64url = bytesToBase64Url(new Uint8Array(kexCPk));
 
       // WebSocket Initialise
-      let newwsc = new WebSocketController(`ws://ws.daryascam.info/channel/${sessionUuid}`);
+      let newwsc = new WebSocketController(`wss://ws.daryascam.info/channel/${sessionUuid}`);
       await newwsc.connectAndWaitChannelReady()
       console.log("WebSocket is ready");
 

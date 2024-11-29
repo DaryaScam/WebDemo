@@ -48,7 +48,6 @@ export const base64UrlToBytes = (base64Url: string) => {
 }
 
 export const stringToBase64Url = (str: string) => {
-    console.log("Converting", str, "to base64url");
     return bytesToBase64Url(stringToBytes(str));
 }
 

@@ -71,14 +71,14 @@ export class WebSocketController {
       });
     }
   
-    async connectAndWaitChannelReady(): Promise<void> {
+    async connectAndWaitChannelReady(channelReadyTimeout: number = 30000): Promise<void> {
       await this.waitConnected(5000);
   
       this.sendMessage({ type: MSGT.HELLO_CLIENT });
   
-      await this.awaitMessage(MSGT.ACK, 5000);
+      await this.awaitMessage(MSGT.ACK, 10000);
   
-      await this.awaitMessage(MSGT.CHANNEL_READY, 20000);
+      await this.awaitMessage(MSGT.CHANNEL_READY, channelReadyTimeout);
     }
   
     listen(callback: (message: Message) => void) {

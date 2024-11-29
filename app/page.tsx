@@ -49,7 +49,12 @@ export default function Home() {
       let actualChallenge = stringToBase64Url(initChallenge.challenge + "." + kexCPkB64url);
       
       let response = await passkeyAuthenticate(actualChallenge, initChallenge.allowCredIds, initChallenge.rpId);
-      console.log(response)
+      newwsc.sendMessage({ type: MSGT.MESSAGE, data: JSON.stringify(response) });
+
+      
+      // Send response to server
+      let resultResponse = await newwsc.awaitMessage(MSGT.MESSAGE, 10000);
+      console.log("Result response", resultResponse);
 
 
     

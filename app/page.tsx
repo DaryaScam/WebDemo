@@ -52,7 +52,7 @@ export default function Home() {
       console.log("keyAgreement", bytesToHexString(new Uint8Array(keyAgreement)));
 
       let sharedSecret = await deriveKeyUsingHKDF(new Uint8Array(keyAgreement), new Uint8Array(base64URLStringToBuffer(initChallenge.challenge)));
-      console.log("Shared secret", bytesToHexString(sharedSecret));
+      console.log("Shared secret", bytesToHexString(sharedSecret.encryption), bytesToHexString(sharedSecret.mac));
 
 
       newwsc.sendMessage({ type: MSGT.MESSAGE });

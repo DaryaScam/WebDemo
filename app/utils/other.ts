@@ -66,7 +66,7 @@ export async function deriveKeyUsingHKDF(keyAgreementBytes: Uint8Array, sharedIn
       // Step 1: Import the input key material
       const baseKey = await crypto.subtle.importKey(
         "raw",
-        inputKeyMaterial,
+        keyAgreementBytes,
         { name: "HKDF" },
         false, // Extractable
         ["deriveKey", "deriveBits"]
@@ -76,9 +76,9 @@ export async function deriveKeyUsingHKDF(keyAgreementBytes: Uint8Array, sharedIn
       const derivedKey = await crypto.subtle.deriveKey(
         {
           name: "HKDF",
-          hash: "SHA-256", // Use SHA-256, SHA-384, or SHA-512
-          salt: salt,
-          info: info,
+          hash: "SHA-256",
+          salt: new Uint8Array(),
+          info: sharedInfo,
         },
         baseKey,
         { name: "AES-GCM", length: 256 }, // Algorithm for the derived key
@@ -91,7 +91,4 @@ export async function deriveKeyUsingHKDF(keyAgreementBytes: Uint8Array, sharedIn
     } catch (error) {
       console.error("Error in HKDF key derivation:", error);
     }
-  }
-  
-  // Example usage
-  deriveKeyUsingHKDF();
+}

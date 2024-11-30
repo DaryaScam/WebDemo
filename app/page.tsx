@@ -8,7 +8,7 @@ import { MSGT, PasskeyAuthInitChallenge, PasskeyAuthResult, WebSocketController 
 import { bytesToBase64Url, bytesToHexString, generateSessionName, stringToBase64Url } from "./utils/other";
 import { passkeyAuthenticate } from "./utils/passkeys";
 import { base64URLStringToBuffer } from "@simplewebauthn/browser";
-import { deriveKeyUsingHKDF, deriveSharedSecret, generateEcdhKeyPair } from "./utils/crypto";
+import { decryptAesGcm, deriveKeyUsingHKDF, deriveSharedSecret, generateEcdhKeyPair } from "./utils/crypto";
 
 export default function Home() {
   const [qrCodeUrl, setQrCodeUrl] = useState<string | null>(null);
@@ -52,7 +52,9 @@ export default function Home() {
       console.log("keyAgreement", bytesToHexString(new Uint8Array(keyAgreement)));
 
       let sharedSecret = await deriveKeyUsingHKDF(new Uint8Array(keyAgreement), new Uint8Array(base64URLStringToBuffer(initChallenge.challenge)));
-      console.log("Shared secret", bytesToHexString(sharedSecret.encryption), bytesToHexString(sharedSecret.mac));
+      let decryptedData = await decryptAesGcm(sharedSecret, new Uint8Array(base64URLStringToBuffer(resultData.encryptedAccessToken)));
+
+      console.log("Decrypted data", bytesToHexString(new Uint8Array(decryptedData)));
 
 
       newwsc.sendMessage({ type: MSGT.MESSAGE });

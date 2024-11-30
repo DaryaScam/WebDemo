@@ -22,7 +22,7 @@ export interface PasskeyAuthInitChallenge {
 }
 
 export interface PasskeyAuthResult {
-    encryptedData: string;
+    encryptedAccessToken: string;
 }
 
   

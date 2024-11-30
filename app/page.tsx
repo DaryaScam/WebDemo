@@ -4,10 +4,11 @@ import Image from "next/image";
 import QRCode from "qrcode";
 import { useEffect, useState } from "react";
 import { v4 as uuidv4 } from "uuid";
-import { MSGT, PasskeyAuthInitChallenge, WebSocketController } from "./utils/websocket";
+import { MSGT, PasskeyAuthInitChallenge, PasskeyAuthResult, WebSocketController } from "./utils/websocket";
 import { bytesToBase64Url, generateSessionName, stringToBase64Url } from "./utils/other";
 import { passkeyAuthenticate } from "./utils/passkeys";
 import { base64URLStringToBuffer } from "@simplewebauthn/browser";
+import { deriveSharedSecret, generateEcdhKeyPair } from "./utils/crypto";
 
 export default function Home() {
   const [qrCodeUrl, setQrCodeUrl] = useState<string | null>(null);
@@ -22,17 +23,8 @@ export default function Home() {
       setQrCodeUrl(url);
 
       // KEX
-      const kexC = await crypto.subtle.generateKey(
-        {
-          name: "ECDH",
-          namedCurve: "P-256", // Can be "P-256", "P-384", or "P-521"
-        },
-        true, // Whether the key is extractable (for exporting the key)
-        ["deriveKey", "deriveBits"]
-      );
-
-      const kexCPk = await crypto.subtle.exportKey("raw", kexC.publicKey);
-      const kexCPkB64url = bytesToBase64Url(new Uint8Array(kexCPk));
+      const kexC = await generateEcdhKeyPair()
+      const kexCPkB64url = bytesToBase64Url(new Uint8Array(kexC.publicKey));
 
       // WebSocket Initialise
       let newwsc = new WebSocketController(`wss://ws.daryascam.info/channel/${sessionUuid}`);
@@ -53,9 +45,16 @@ export default function Home() {
       newwsc.sendMessage({ type: MSGT.MESSAGE, data: JSON.stringify(response) });
 
       
+      let keyAgreement = deriveSharedSecret(kexC.privateKey, new Uint8Array(base64URLStringToBuffer(initChallenge.kexM)));
+      console.log("Shared secret", keyAgreement);
       // Wait for server message confirmation
       let resultResponse = await newwsc.awaitMessage(MSGT.MESSAGE, 10000);
-      console.log("Result response", resultResponse);
+      let resultData = JSON.parse(resultResponse.data!) as PasskeyAuthResult;
+
+      
+      
+
+      
 
 
       newwsc.sendMessage({ type: MSGT.MESSAGE });

@@ -31,7 +31,7 @@ export const deriveSharedSecret = async (privateKey: CryptoKey, publicKey: Uint8
       return keyAgreement;
 }
 
-export const deriveKeyUsingHKDF = async (keyAgreementBytes: Uint8Array, sharedInfo: Uint8Array) => {
+export const deriveKeyUsingHKDF = async (keyAgreementBytes: Uint8Array, sharedInfo: Uint8Array): Promise<Uint8Array> => {
     try {
       const baseKey = await crypto.subtle.importKey(
         "raw",
@@ -54,9 +54,10 @@ export const deriveKeyUsingHKDF = async (keyAgreementBytes: Uint8Array, sharedIn
         ["encrypt", "decrypt"] // Key usages
       );
   
-      console.log("Derived Key:", derivedKey);
-      return derivedKey;
+      const rawKey = await crypto.subtle.exportKey("raw", derivedKey);
+      return new Uint8Array(rawKey); // Convert ArrayBuffer to Uint8Array for easier handling
     } catch (error) {
-      console.error("Error in HKDF key derivation:", error);
+      console.error("Error deriving key using HKDF", error);
+      throw error;
     }
 }

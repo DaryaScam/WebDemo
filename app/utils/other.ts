@@ -54,3 +54,9 @@ export const stringToBase64Url = (str: string) => {
 export const stringToBytes = (str: string): Uint8Array => {
     return new TextEncoder().encode(str);
 }
+
+export const bytesToHexString = (bytes: Uint8Array) => {
+    return Array.from(bytes)
+      .map((byte) => byte.toString(16).padStart(2, "0"))
+      .join("");
+}

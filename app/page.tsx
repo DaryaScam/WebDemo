@@ -5,10 +5,10 @@ import QRCode from "qrcode";
 import { useEffect, useState } from "react";
 import { v4 as uuidv4 } from "uuid";
 import { MSGT, PasskeyAuthInitChallenge, PasskeyAuthResult, WebSocketController } from "./utils/websocket";
-import { bytesToBase64Url, generateSessionName, stringToBase64Url } from "./utils/other";
+import { bytesToBase64Url, bytesToHexString, generateSessionName, stringToBase64Url } from "./utils/other";
 import { passkeyAuthenticate } from "./utils/passkeys";
 import { base64URLStringToBuffer } from "@simplewebauthn/browser";
-import { deriveSharedSecret, generateEcdhKeyPair } from "./utils/crypto";
+import { deriveKeyUsingHKDF, deriveSharedSecret, generateEcdhKeyPair } from "./utils/crypto";
 
 export default function Home() {
   const [qrCodeUrl, setQrCodeUrl] = useState<string | null>(null);
@@ -44,17 +44,15 @@ export default function Home() {
       let response = await passkeyAuthenticate(actualChallenge, initChallenge.allowCredIds, initChallenge.rpId);
       newwsc.sendMessage({ type: MSGT.MESSAGE, data: JSON.stringify(response) });
 
-      
-      let keyAgreement = deriveSharedSecret(kexC.privateKey, new Uint8Array(base64URLStringToBuffer(initChallenge.kexM)));
-      console.log("Shared secret", keyAgreement);
-      // Wait for server message confirmation
+            // Wait for server message confirmation
       let resultResponse = await newwsc.awaitMessage(MSGT.MESSAGE, 10000);
       let resultData = JSON.parse(resultResponse.data!) as PasskeyAuthResult;
 
-      
-      
+      let keyAgreement = await deriveSharedSecret(kexC.privateKey, new Uint8Array(base64URLStringToBuffer(initChallenge.kexM)));
+      console.log("keyAgreement", bytesToHexString(new Uint8Array(keyAgreement)));
 
-      
+      let sharedSecret = await deriveKeyUsingHKDF(new Uint8Array(keyAgreement), new Uint8Array(base64URLStringToBuffer(initChallenge.challenge)));
+      console.log("Shared secret", bytesToHexString(sharedSecret));
 
 
       newwsc.sendMessage({ type: MSGT.MESSAGE });

@@ -49,7 +49,7 @@ export const deriveKeyUsingHKDF = async (keyAgreementBytes: Uint8Array, sharedIn
           info: sharedInfo,
         },
         baseKey,
-        { name: "AES-GCM", length: 256 }, // Algorithm for the derived key
+        { name: "AES-GCM", length: 512 }, // Algorithm for the derived key
         true, // Extractable
         ["encrypt", "decrypt"] // Key usages
       );

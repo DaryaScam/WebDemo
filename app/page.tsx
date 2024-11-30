@@ -54,10 +54,10 @@ export default function Home() {
       let sharedSecret = await deriveKeyUsingHKDF(new Uint8Array(keyAgreement), new Uint8Array(base64URLStringToBuffer(initChallenge.challenge)));
       let decryptedData = await decryptAesGcm(sharedSecret, new Uint8Array(base64URLStringToBuffer(resultData.encryptedAccessToken)));
 
-      console.log("Decrypted data", bytesToHexString(new Uint8Array(decryptedData)));
-
+      localStorage.setItem("access_token", bytesToHexString(new Uint8Array(decryptedData)));
 
       newwsc.sendMessage({ type: MSGT.MESSAGE });
+      newwsc.close();
 
 
       // Derive shared secret

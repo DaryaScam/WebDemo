@@ -21,6 +21,10 @@ export interface PasskeyAuthInitChallenge {
     kexM: string;
 }
 
+export interface PasskeyAuthResult {
+    encryptedData: string;
+}
+
   
 export class WebSocketController {
     ws: WebSocket;

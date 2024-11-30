@@ -54,3 +54,44 @@ export const stringToBase64Url = (str: string) => {
 export const stringToBytes = (str: string): Uint8Array => {
     return new TextEncoder().encode(str);
 }
+
+export async function deriveKeyUsingHKDF(keyAgreementBytes: Uint8Array, sharedInfo: Uint8Array) {
+    try {
+      // Input parameters
+      const inputKeyMaterial = new TextEncoder().encode("initial secret"); // Your secret
+      const salt = new TextEncoder().encode("random salt"); // Should be random
+      const info = new TextEncoder().encode("key derivation info"); // Application-specific context
+      const outputKeyLength = 256; // Derived key length in bits
+  
+      // Step 1: Import the input key material
+      const baseKey = await crypto.subtle.importKey(
+        "raw",
+        inputKeyMaterial,
+        { name: "HKDF" },
+        false, // Extractable
+        ["deriveKey", "deriveBits"]
+      );
+  
+      // Step 2: Derive the key using HKDF
+      const derivedKey = await crypto.subtle.deriveKey(
+        {
+          name: "HKDF",
+          hash: "SHA-256", // Use SHA-256, SHA-384, or SHA-512
+          salt: salt,
+          info: info,
+        },
+        baseKey,
+        { name: "AES-GCM", length: 256 }, // Algorithm for the derived key
+        true, // Extractable
+        ["encrypt", "decrypt"] // Key usages
+      );
+  
+      console.log("Derived Key:", derivedKey);
+      return derivedKey;
+    } catch (error) {
+      console.error("Error in HKDF key derivation:", error);
+    }
+  }
+  
+  // Example usage
+  deriveKeyUsingHKDF();

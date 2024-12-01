@@ -15,52 +15,60 @@ export default function Home() {
 
   useEffect(() => {    
     const asyncWrapper = async (): Promise<boolean> => {
-      const sessionUuid = uuidv4();
-
-      const url = await QRCode.toDataURL(sessionUuid);
-
-      setQrCodeUrl(url);
-
-      // KEX
-      const kexC = await generateEcdhKeyPair()
-      const kexCPkB64url = bytesToBase64Url(new Uint8Array(kexC.publicKey));
-
-      // WebSocket Initialise
-      let newwsc = new WebSocketController(`wss://ws.daryascam.info/channel/${sessionUuid}`);
-      await newwsc.connectAndWaitChannelReady()
-      console.log("WebSocket is ready");
-
-      // Init message
-      let initMessage = { browserName: generateSessionName() };
-      newwsc.sendMessage({ type: MSGT.MESSAGE, data: JSON.stringify(initMessage) });
-
-      // Challenge
-      let initChallengeMsg = await newwsc.awaitMessage(MSGT.MESSAGE, 10000);
-      let initChallenge = JSON.parse(initChallengeMsg.data!) as PasskeyAuthInitChallenge;
-
-      let actualChallenge = stringToBase64Url(initChallenge.challenge + "." + kexCPkB64url);
+      let newwsc: WebSocketController | null = null;
       
-      let response = await passkeyAuthenticate(actualChallenge, initChallenge.allowCredIds, initChallenge.rpId);
-      newwsc.sendMessage({ type: MSGT.MESSAGE, data: JSON.stringify(response) });
+      try {
+        const sessionUuid = uuidv4();
 
-      // Wait for server message confirmation
-      let resultResponse = await newwsc.awaitMessage(MSGT.MESSAGE, 10000);
-      let resultData = JSON.parse(resultResponse.data!) as PasskeyAuthResult;
+        const url = await QRCode.toDataURL(sessionUuid);
 
-      let keyAgreement = await deriveSharedSecret(kexC.privateKey, new Uint8Array(base64URLStringToBuffer(initChallenge.kexM)));
-      console.log("keyAgreement", bytesToHexString(new Uint8Array(keyAgreement)));
+        setQrCodeUrl(url);
 
-      let sharedSecret = await deriveKeyUsingHKDF(new Uint8Array(keyAgreement), new Uint8Array(base64URLStringToBuffer(initChallenge.challenge)));
-      let decryptedData = await decryptAesGcm(sharedSecret, new Uint8Array(base64URLStringToBuffer(resultData.encryptedAccessToken)));
+        // KEX
+        const kexC = await generateEcdhKeyPair()
+        const kexCPkB64url = bytesToBase64Url(new Uint8Array(kexC.publicKey));
 
-      localStorage.setItem("access_token", bytesToHexString(new Uint8Array(decryptedData)));
+        // WebSocket Initialise
+        newwsc = new WebSocketController(`wss://ws.daryascam.info/channel/${sessionUuid}`);
+        await newwsc.connectAndWaitChannelReady()
+        console.log("WebSocket is ready");
 
-      newwsc.sendMessage({ type: MSGT.MESSAGE });
-      newwsc.close();
+        // Init message
+        let initMessage = { browserName: generateSessionName() };
+        newwsc.sendMessage({ type: MSGT.MESSAGE, data: JSON.stringify(initMessage) });
 
-      window.location.href = "/messages";
+        // Challenge
+        let initChallengeMsg = await newwsc.awaitMessage(MSGT.MESSAGE, 10000);
+        let initChallenge = JSON.parse(initChallengeMsg.data!) as PasskeyAuthInitChallenge;
 
-      return true;
+        let actualChallenge = stringToBase64Url(initChallenge.challenge + "." + kexCPkB64url);
+        
+        let response = await passkeyAuthenticate(actualChallenge, initChallenge.allowCredIds, initChallenge.rpId);
+        newwsc.sendMessage({ type: MSGT.MESSAGE, data: JSON.stringify(response) });
+
+        // Wait for server message confirmation
+        let resultResponse = await newwsc.awaitMessage(MSGT.MESSAGE, 10000);
+        let resultData = JSON.parse(resultResponse.data!) as PasskeyAuthResult;
+
+        let keyAgreement = await deriveSharedSecret(kexC.privateKey, new Uint8Array(base64URLStringToBuffer(initChallenge.kexM)));
+        console.log("keyAgreement", bytesToHexString(new Uint8Array(keyAgreement)));
+
+        let sharedSecret = await deriveKeyUsingHKDF(new Uint8Array(keyAgreement), new Uint8Array(base64URLStringToBuffer(initChallenge.challenge)));
+        let decryptedData = await decryptAesGcm(sharedSecret, new Uint8Array(base64URLStringToBuffer(resultData.encryptedAccessToken)));
+
+        localStorage.setItem("access_token", bytesToHexString(new Uint8Array(decryptedData)));
+
+        newwsc.sendMessage({ type: MSGT.MESSAGE });
+        newwsc.close();
+
+        window.location.href = "/messages";
+
+        return true;
+      } catch (error) {
+        console.error("Error in asyncWrapper", error);
+        newwsc?.close();
+        return false;
+      }
     };
     
     const retryAsyncWrapper = async () => {
@@ -69,6 +77,7 @@ export default function Home() {
           await asyncWrapper();
           break;
         } catch (error) {
+          console.log(error)
           console.error("Error in asyncWrapper", error);
         }
         await new Promise(resolve => setTimeout(resolve, 500));

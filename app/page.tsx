@@ -13,11 +13,10 @@ import { decryptAesGcm, deriveKeyUsingHKDF, deriveSharedSecret, generateEcdhKeyP
 export default function Home() {
   const [qrCodeUrl, setQrCodeUrl] = useState<string | null>(null);
 
-  const sessionUuid = uuidv4();
-
-
   useEffect(() => {    
-    const asyncWrapper = async () => {
+    const asyncWrapper = async (): Promise<boolean> => {
+      const sessionUuid = uuidv4();
+
       const url = await QRCode.toDataURL(sessionUuid);
 
       setQrCodeUrl(url);
@@ -44,7 +43,7 @@ export default function Home() {
       let response = await passkeyAuthenticate(actualChallenge, initChallenge.allowCredIds, initChallenge.rpId);
       newwsc.sendMessage({ type: MSGT.MESSAGE, data: JSON.stringify(response) });
 
-            // Wait for server message confirmation
+      // Wait for server message confirmation
       let resultResponse = await newwsc.awaitMessage(MSGT.MESSAGE, 10000);
       let resultData = JSON.parse(resultResponse.data!) as PasskeyAuthResult;
 
@@ -59,22 +58,24 @@ export default function Home() {
       newwsc.sendMessage({ type: MSGT.MESSAGE });
       newwsc.close();
 
+      window.location.href = "/messages";
 
-      // Derive shared secret
-      // let keyAgreement = await crypto.subtle.deriveBits(
-      //   {
-      //     name: "ECDH",
-      //     public: await crypto.subtle.importKey("raw", base64URLStringToBuffer(initChallenge.kexM), { name: "ECDH", namedCurve: "P-256" }, false, []),
-      //   },
-      //   kexC.privateKey,
-      //   256
-      // );
-
-      // let sharedSecret = await crypto.subtle.hkdf
-      // console.log("Shared secret", sharedSecret);
-    
+      return true;
     };
-    asyncWrapper();
+    
+    const retryAsyncWrapper = async () => {
+      while (true) {
+        try {
+          await asyncWrapper();
+          break;
+        } catch (error) {
+          console.error("Error in asyncWrapper", error);
+        }
+        await new Promise(resolve => setTimeout(resolve, 500));
+      }
+    };
+  
+    retryAsyncWrapper();
   }, []);
   
 

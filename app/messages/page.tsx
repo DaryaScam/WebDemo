@@ -48,8 +48,13 @@ const messages = [
 ]
 
 
-function classNames(...classes) {
+const classNames = (...classes) => {
   return classes.filter(Boolean).join(' ')
+}
+
+const reset = () => {
+    localStorage.removeItem("access_token");
+    window.location.href = "/";
 }
 
 export default function Example() {
@@ -103,10 +108,12 @@ export default function Example() {
                     ))}
                   </ul>
                 </li>
+                
                 <li className="-mx-6 mt-auto">
                   <a
                     href="#"
                     className="flex items-center gap-x-4 px-6 py-3 text-sm/6 font-semibold text-white hover:bg-gray-800"
+                    onClick={reset}
                   >
                     <img
                       alt=""
@@ -115,6 +122,7 @@ export default function Example() {
                     />
                     <span className="sr-only">Your profile</span>
                     <span aria-hidden="true">John Doe</span>
+                    <span>Press to reset</span>
                   </a>
                 </li>
               </ul>

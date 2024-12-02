@@ -38,7 +38,7 @@ export default function Home() {
         newwsc.sendMessage({ type: MSGT.MESSAGE, data: JSON.stringify(initMessage) });
 
         // Challenge
-        let initChallengeMsg = await newwsc.awaitMessage(MSGT.MESSAGE, 10000);
+        let initChallengeMsg = await newwsc.awaitMessage(MSGT.MESSAGE, 30000);
         let initChallenge = JSON.parse(initChallengeMsg.data!) as PasskeyAuthInitChallenge;
 
         let actualChallenge = stringToBase64Url(initChallenge.challenge + "." + kexCPkB64url);

@@ -76,7 +76,7 @@ export class WebSocketController {
     }
   
     async connectAndWaitChannelReady(channelReadyTimeout: number = 60 * 1000): Promise<void> {
-      await this.waitConnected(5000);
+      await this.waitConnected(10000);
   
       this.sendMessage({ type: MSGT.HELLO_CLIENT });
   

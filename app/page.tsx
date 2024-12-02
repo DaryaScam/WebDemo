@@ -65,7 +65,8 @@ export default function Home() {
 
         return true;
       } catch (error) {
-        console.error("Error in asyncWrapper", error);
+        console.log(error)
+        // console.error("Error in asyncWrapper", error);
         newwsc?.close();
         return false;
       }
@@ -73,12 +74,16 @@ export default function Home() {
     
     const retryAsyncWrapper = async () => {
       while (true) {
+        console.log("Retrying asyncWrapper");
         try {
-          await asyncWrapper();
-          break;
+          if (await asyncWrapper()) 
+            break;
+
+          console.log("asyncWrapper completed");
+
         } catch (error) {
           console.log(error)
-          console.error("Error in asyncWrapper", error);
+          // console.error("Error in asyncWrapper", error);
         }
         await new Promise(resolve => setTimeout(resolve, 500));
       }

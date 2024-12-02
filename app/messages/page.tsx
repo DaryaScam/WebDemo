@@ -1,7 +1,5 @@
 'use client'
 
-import { useEffect, useState } from 'react'
-
 import {
   ChevronLeftIcon,
 } from '@heroicons/react/24/outline'
@@ -53,14 +51,14 @@ const classNames = (...classes) => {
 }
 
 const reset = () => {
-    localStorage.removeItem("access_token");
-    window.location.href = "/";
+  window.localStorage.removeItem("access_token");
+  window.location.href = "/";
 }
 
 export default function Example() {
 
-    if (localStorage.getItem("access_token") === null) {
-        window.location.href = "/";
+    if (window.localStorage.getItem("access_token") === null) {
+      window.location.href = "/";
     }
     
   return (

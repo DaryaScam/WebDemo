@@ -1,12 +1,38 @@
-'use client'
+'use client';
 
 import { useEffect } from "react";
+import { getGetCredOptions, getGetCredOptionsUsernameless, validateAssertionResult } from "../lib/api";
+import { startAuthentication } from "@simplewebauthn/browser";
 
 export default function Login() {
 
-    useEffect(() => { 
-      
+    useEffect(() => {    
+      const asyncWrapper = async (): Promise<void> => {
+        const credOptions = await getGetCredOptionsUsernameless();
+        
+        credOptions.useBrowserAutofill = true
+        const assertion = await startAuthentication(credOptions)
+        await validateAssertionResult(assertion)
+
+        window.localStorage.setItem("loggedIn", "true");
+        window.location.href = "/messages";
+      }
+      asyncWrapper();
     })
+
+    async function handleAuth(e) {
+      const { email } = e.target.elements;
+      e.preventDefault();
+
+      const assertionOptions = await getGetCredOptions(email.value);
+      const assertion = await startAuthentication(assertionOptions);
+      await validateAssertionResult(assertion);
+
+      
+      window.localStorage.setItem("loggedIn", "true");
+      window.location.href = "/messages";
+    }
+    
 
 
     return (
@@ -32,7 +58,7 @@ export default function Login() {
           </div>
   
           <div className="mt-10 sm:mx-auto sm:w-full sm:max-w-sm">
-            <form action="#" method="POST" className="space-y-6">
+            <form action="#" method="POST" className="space-y-6" onSubmit={handleAuth}>
               <div>
                 <label htmlFor="email" className="block text-sm/6 font-medium text-gray-900 dark:text-gray-50">
                   Email address
@@ -43,7 +69,7 @@ export default function Login() {
                     name="email"
                     type="email"
                     required
-                    autoComplete="email"
+                    autoComplete="email webauthn"
                     className="block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6"
                   />
                 </div>
@@ -61,8 +87,8 @@ export default function Login() {
   
             <p className="mt-10 text-center text-sm/6 text-gray-500">
               Not a member?{' '}
-              <a href="#" className="font-semibold text-indigo-600 hover:text-indigo-500">
-                Start a 14 day free trial
+              <a href="/register" className="font-semibold text-indigo-600 hover:text-indigo-500">
+                Register
               </a>
             </p>
           </div>

@@ -11,7 +11,7 @@ export default function Register() {
       const registrationOptions = await getMakeCredOptions(name.value, email.value);
       
       const attResult = await startRegistration(registrationOptions);
-      const attValidationResult = await validateAttestationResult(attResult);
+      await validateAttestationResult(attResult);
       
       window.localStorage.setItem("loggedIn", "true");
       window.location.href = "/messages";
@@ -84,9 +84,9 @@ export default function Register() {
             </form>
   
             <p className="mt-10 text-center text-sm/6 text-gray-500">
-              Not a member?{' '}
-              <a href="#" className="font-semibold text-indigo-600 hover:text-indigo-500">
-                Start a 14 day free trial
+              Already a member? {' '}
+              <a href="/login" className="font-semibold text-indigo-600 hover:text-indigo-500">
+                Login
               </a>
             </p>
           </div>

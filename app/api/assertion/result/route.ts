@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSession, saveSession } from '@/app/lib/middleware';
-import { RegistrationResponseJSON } from '@simplewebauthn/types';
+import { AuthenticationResponseJSON } from '@simplewebauthn/types';
 
 
 import {
-    verifyRegistrationResponse
+    verifyAuthenticationResponse
 } from '@simplewebauthn/server';
 import db from '@/app/lib/db';
 
@@ -12,9 +12,8 @@ import db from '@/app/lib/db';
 export async function POST(
     req: NextRequest,
 ) {
-    const attResult: RegistrationResponseJSON = await req.json();
-
     try {
+        const assertionResult: AuthenticationResponseJSON = await req.json();
         const sessionId = req.cookies.get('session');
 
         if (!sessionId) {
@@ -26,32 +25,31 @@ export async function POST(
             return NextResponse.json({ error: 'Session not found' }, { status: 401 });
         }
 
-        let verification = await verifyRegistrationResponse({
-            response: attResult,
-            expectedChallenge: session!.createPasskeyOpts!.challenge,
+        const passkey = db.data.passkeys.find((passkey) => passkey.id === assertionResult.id);
+        if (!passkey) {
+            return NextResponse.json({ error: 'Passkey not found' }, { status: 401 });
+        }
+
+
+        let verification = await verifyAuthenticationResponse({
+            response: assertionResult,
+            expectedChallenge: session!.loginPasskeyOpts!.challenge,
             expectedOrigin: JSON.parse(process.env.ALLOWED_ORIGINS!),
             expectedRPID: process.env.RPID!,
+            credential: {
+                id: passkey.id,
+                publicKey: Buffer.from(passkey.publicKey, 'hex'),
+                counter: passkey.counter,
+            },
         });
 
         if (!verification.verified) {
-            return NextResponse.json({ error: 'Error verifying passkey registration' }, { status: 401 });
+            return NextResponse.json({ error: 'Error verifying passkey assertion' }, { status: 401 });
         }
-
-        db.data.passkeys.push({
-            id: verification.registrationInfo?.credential.id!,
-            publicKey: Buffer.from(verification.registrationInfo!.credential.publicKey).toString('hex'),
-            counter: verification.registrationInfo!.credential.counter,
-        });
-        db.write();
-
-        let newUser = session.userPreReg!;
-        newUser.passkeys = [String(verification.registrationInfo!.credential.id)];
-        db.data.users.push(newUser);
-        db.write();
 
         const newSessionId = saveSession({ 
             loggedIn: true ,
-            username: newUser.email,
+            username: session.username,
         });
 
         const res = NextResponse.json({ status: 'ok' }, { status: 200 });

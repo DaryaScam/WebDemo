@@ -1,4 +1,4 @@
-import { RegistrationResponseJSON } from '@simplewebauthn/types';
+import { AuthenticationResponseJSON, RegistrationResponseJSON } from '@simplewebauthn/types';
 
 export const getMakeCredOptions = async (name: string, email: string) => {
     const registrationOptions = await fetch('/api/attestation/init', {
@@ -61,7 +61,7 @@ export const getGetCredOptionsUsernameless = async () => {
 }
 
 
-export const validateAssertionResult = async (assertionResult: any) => {
+export const validateAssertionResult = async (assertionResult: AuthenticationResponseJSON) => {
     const validation = await fetch('/api/assertion/result', {
         method: 'POST',
         headers: {

@@ -1,5 +1,6 @@
 import { JSONFileSyncPreset } from 'lowdb/node'
 import type {
+    AuthenticatorTransportFuture,
     PublicKeyCredentialCreationOptionsJSON,
     WebAuthnCredential,
 } from '@simplewebauthn/types';
@@ -21,10 +22,17 @@ export interface User {
     passkeys?: string[];
 }
 
+interface Passkey {
+    id: Base64URLString;
+    publicKey: string;
+    counter: number;
+    transports?: AuthenticatorTransportFuture[];
+}
+
 export interface Data {
     sessions: Session[];
     users: User[];
-    passkeys: WebAuthnCredential[];
+    passkeys: Passkey[];
 }
 
 const defaultData: Data = { 

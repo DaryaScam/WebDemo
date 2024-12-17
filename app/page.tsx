@@ -155,6 +155,7 @@ export default function Home() {
           />
           Go to DaryaScam.info →
         </a>
+        <a href="/login">Traditional Login Demo</a>
       </footer>
     </div>
   );

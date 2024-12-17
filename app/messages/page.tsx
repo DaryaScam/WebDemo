@@ -52,12 +52,13 @@ const classNames = (...classes) => {
 
 const reset = () => {
   window.localStorage.removeItem("access_token");
+  window.localStorage.removeItem("loggedIn");
   window.location.href = "/";
 }
 
-export default function Example() {
+export default function Messages() {
 
-    if (window.localStorage.getItem("access_token") === null) {
+    if (window.localStorage.getItem("access_token") === null && window.localStorage.getItem("loggedIn") === null) {
       window.location.href = "/";
     }
     

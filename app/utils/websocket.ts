@@ -1,9 +1,7 @@
 export const MSGT = {
     HELLO_CLIENT: "hello-client",
     HELLO_MESSENGER: "hello-messenger",
-
     CHANNEL_READY: "channel-ready",
-
     MESSAGE: "message",
     ACK: "ack",
     ERROR: "error",
@@ -129,5 +127,5 @@ export class WebSocketController {
     close() {
       this.ws.close();
     }
-  }
+}
     
